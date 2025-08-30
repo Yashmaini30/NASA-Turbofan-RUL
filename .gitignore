@@ -1,1 +1,9 @@
 venv
+__pycache__/
+*__pycache__*
+*.pyc
+*.pyo
+*.pyd
+.Python
+src\data\__pycache__\load_data.cpython-311.pyc
+artifacts/
