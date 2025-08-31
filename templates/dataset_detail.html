@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}{{ dataset_name }} Analysis - NASA Turbofan RUL{% endblock %}
+
+{% block content %}
+<!-- Dataset Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">{{ dataset_name }}</li>
+                    </ol>
+                </nav>
+                <h1 class="display-6 fw-bold text-primary">
+                    <i class="fas fa-database me-3"></i>{{ dataset_name }} Dataset Analysis
+                </h1>
+                <p class="lead text-muted">{{ dataset_info.info.description }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dataset Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-cogs display-6 text-primary mb-3"></i>
+                <h3 class="fw-bold">{{ dataset_info.train_engines }}</h3>
+                <p class="text-muted mb-0">Training Engines</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-flask display-6 text-success mb-3"></i>
+                <h3 class="fw-bold">{{ dataset_info.test_engines }}</h3>
+                <p class="text-muted mb-0">Test Engines</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-sync display-6 text-warning mb-3"></i>
+                <h3 class="fw-bold">{{ dataset_info.max_cycles }}</h3>
+                <p class="text-muted mb-0">Max Cycles</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line display-6 text-info mb-3"></i>
+                <h3 class="fw-bold">{{ "%.0f"|format(dataset_info.avg_life) }}</h3>
+                <p class="text-muted mb-0">Avg Lifecycle</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dataset Info Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Dataset Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Operating Conditions</h6>
+                        <p class="text-muted">{{ dataset_info.info.conditions }} condition(s)</p>
+                        
+                        <h6 class="fw-bold">Fault Modes</h6>
+                        <p class="text-muted">{{ dataset_info.info.fault_modes }} fault mode(s)</p>
+                        
+                        <h6 class="fw-bold">Training Data Shape</h6>
+                        <p class="text-muted">{{ dataset_info.train_shape[0] }} rows × {{ dataset_info.train_shape[1] }} columns</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Test Data Shape</h6>
+                        <p class="text-muted">{{ dataset_info.test_shape[0] }} rows × {{ dataset_info.test_shape[1] }} columns</p>
+                        
+                        <h6 class="fw-bold">Description</h6>
+                        <p class="text-muted">{{ dataset_info.info.description }}</p>
+                        
+                        <div class="mt-3">
+                            <button class="btn btn-outline-primary btn-sm" onclick="loadDatasetStats('{{ dataset_name }}')">
+                                <i class="fas fa-chart-bar me-1"></i>Load Detailed Statistics
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Basic EDA Visualizations -->
+{% if plots.basic_eda[dataset_name] %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="section-title mb-4">
+            <i class="fas fa-chart-bar me-2"></i>Basic Exploratory Data Analysis
+            <small class="text-muted fs-6">Fundamental patterns and relationships</small>
+        </h2>
+    </div>
+    
+    {% for plot in plots.basic_eda[dataset_name] %}
+    <div class="col-lg-6 mb-4">
+        <div class="card viz-card border-0 shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-image me-2"></i>
+                    {% if 'lifecycles' in plot %}
+                        Engine Lifecycle Trajectories
+                        <small class="text-muted">- Individual engine degradation patterns over time</small>
+                    {% elif 'sensor_correlations' in plot %}
+                        Sensor Correlation Matrix
+                        <small class="text-muted">- Relationships between sensor measurements</small>
+                    {% elif 'degradation_patterns' in plot %}
+                        Degradation Pattern Analysis
+                        <small class="text-muted">- How sensors change as engines degrade</small>
+                    {% elif 'failure_patterns' in plot %}
+                        Failure Pattern Analysis
+                        <small class="text-muted">- Common patterns leading to engine failure</small>
+                    {% else %}
+                        {{ plot.replace(dataset_name + '_', '').replace('_', ' ').replace('.png', '').title() }}
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ url_for('static', filename='../reports/' + plot) }}" 
+                     class="img-fluid rounded shadow-sm" 
+                     alt="{{ plot }}"
+                     style="max-height: 450px; cursor: pointer;"
+                     onclick="showImageModal(this)">
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Advanced Analysis Visualizations -->
+{% if plots.advanced_analysis[dataset_name] %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="section-title mb-4">
+            <i class="fas fa-brain me-2"></i>Advanced Statistical Analysis
+            <small class="text-muted fs-6">Sophisticated analytical techniques and uncertainty quantification</small>
+        </h2>
+    </div>
+    
+    {% for plot in plots.advanced_analysis[dataset_name] %}
+    <div class="col-lg-6 mb-4">
+        <div class="card viz-card border-0 shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-microscope me-2"></i>
+                    {% if 'pca_analysis' in plot %}
+                        Principal Component Analysis
+                        <small class="text-muted">- Dimensionality reduction and feature importance</small>
+                    {% elif 'drift_analysis' in plot %}
+                        Data Drift Detection
+                        <small class="text-muted">- Statistical drift between training and test data</small>
+                    {% elif 'uncertainty_baseline' in plot %}
+                        Uncertainty Baseline Analysis
+                        <small class="text-muted">- Operating condition variability assessment</small>
+                    {% elif 'statistical_failure_analysis' in plot %}
+                        Statistical Failure Analysis
+                        <small class="text-muted">- Advanced failure pattern detection</small>
+                    {% elif 'temporal_features' in plot %}
+                        Temporal Feature Analysis
+                        <small class="text-muted">- Time-series feature extraction and analysis</small>
+                    {% elif 'time_series_embeddings' in plot %}
+                        Time Series Embeddings
+                        <small class="text-muted">- High-dimensional temporal pattern visualization</small>
+                    {% else %}
+                        {{ plot.replace(dataset_name + '_', '').replace('_', ' ').replace('.png', '').title() }}
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ url_for('static', filename='../reports/' + plot) }}" 
+                     class="img-fluid rounded shadow-sm" 
+                     alt="{{ plot }}"
+                     style="max-height: 450px; cursor: pointer;"
+                     onclick="showImageModal(this)">
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Sensor Information -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="section-title mb-4">
+            <i class="fas fa-sensors me-2"></i>Sensor Information
+            <small class="text-muted fs-6">Detailed descriptions of all 21 turbofan engine sensors</small>
+        </h2>
+    </div>
+    
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="row">
+                    {% for sensor, description in sensor_descriptions.items() %}
+                    <div class="col-md-6 mb-3">
+                        <div class="sensor-info p-3 border rounded">
+                            <h6 class="fw-bold text-primary">{{ sensor.replace('_', ' ').title() }}</h6>
+                            <p class="small text-muted mb-0">{{ description }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dataset Navigation -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-exchange-alt me-2"></i>Compare with Other Datasets
+                </h5>
+                <p class="card-text text-muted">
+                    View analysis for other datasets to compare patterns and characteristics
+                </p>
+                
+                <div class="d-flex flex-wrap gap-2">
+                    {% for ds_name in ['FD001', 'FD002', 'FD003', 'FD004'] %}
+                        {% if ds_name != dataset_name %}
+                        <a href="{{ url_for('dataset_detail', dataset_name=ds_name) }}" 
+                           class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-database me-1"></i>{{ ds_name }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <a href="{{ url_for('analysis_view', analysis_type='basic_eda') }}" 
+                       class="btn btn-primary btn-sm ms-auto">
+                        <i class="fas fa-chart-line me-1"></i>Compare All Datasets
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Statistics Modal -->
+<div class="modal fade" id="statsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ dataset_name }} Detailed Statistics</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="statsContent">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading detailed statistics...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalTitle">Visualization</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" alt="">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function showImageModal(img) {
+    document.getElementById('modalImage').src = img.src;
+    document.getElementById('imageModalTitle').textContent = img.alt.replace('_', ' ').replace('.png', '');
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
+}
+
+function loadDatasetStats(datasetName) {
+    const modal = new bootstrap.Modal(document.getElementById('statsModal'));
+    modal.show();
+    
+    fetch(`/api/dataset/${datasetName}/stats`)
+        .then(response => response.json())
+        .then(data => {
+            let html = '<div class="row">';
+            
+            // Training stats
+            html += '<div class="col-md-6"><h6>Training Data Statistics</h6>';
+            html += '<div class="table-responsive"><table class="table table-sm">';
+            html += '<thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>';
+            
+            Object.entries(data.train_stats).forEach(([key, value]) => {
+                if (key.startsWith('sensor_')) {
+                    html += `<tr><td>${key}</td><td>${value.mean.toFixed(2)} (±${value.std.toFixed(2)})</td></tr>`;
+                }
+            });
+            
+            html += '</tbody></table></div></div>';
+            
+            // Test stats
+            html += '<div class="col-md-6"><h6>Test Data Statistics</h6>';
+            html += '<div class="table-responsive"><table class="table table-sm">';
+            html += '<thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>';
+            
+            Object.entries(data.test_stats).forEach(([key, value]) => {
+                if (key.startsWith('sensor_')) {
+                    html += `<tr><td>${key}</td><td>${value.mean.toFixed(2)} (±${value.std.toFixed(2)})</td></tr>`;
+                }
+            });
+            
+            html += '</tbody></table></div></div></div>';
+            
+            document.getElementById('statsContent').innerHTML = html;
+        })
+        .catch(error => {
+            document.getElementById('statsContent').innerHTML = 
+                '<div class="alert alert-danger">Error loading statistics</div>';
+        });
+}
+
+// Add smooth animations
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.stat-card, .viz-card');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('fade-in');
+    });
+});
+</script>
+{% endblock %}
