@@ -27,19 +27,16 @@ def load_cmapss_data(config, fd_key, seq_len=30):
     train_file = config["dataset"]["files"][fd_key]["train"]
     train_path = Path(data_dir) / train_file
 
-    # Load train data
     df = pd.read_csv(train_path, sep=" ", header=None)
     df = df.drop(df.columns[[26, 27]], axis=1)
     sensor_idx = list(range(5, 26))
     X = df.iloc[:, sensor_idx].values.astype(np.float32)
 
-    # Compute per-cycle RUL for each row
-    unit_col = 0  
-    cycle_col = 1 
+    unit_col = 0
+    cycle_col = 1
     max_cycles = df.groupby(unit_col)[cycle_col].transform('max')
     y = (max_cycles - df[cycle_col]).values.astype(np.float32).reshape(-1, 1)
 
-    # sequences for each engine unit
     xs_all, ys_all = [], []
     for unit in df[unit_col].unique():
         unit_mask = df[unit_col] == unit
@@ -59,14 +56,17 @@ def load_cmapss_data(config, fd_key, seq_len=30):
     return loader
 
 def train_and_log(train_loader, val_loader, params, fd_key):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_params = {k: params[k] for k in ["input_dim", "hidden_dim", "num_layers", "output_dim", "dropout"]}
-    model = LSTMModel(**model_params)
+    model = LSTMModel(**model_params).to(device)
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=params.get("lr", 1e-3))
 
     for epoch in range(params.get("epochs", 10)):
         model.train()
         for batch_x, batch_y in train_loader:
+            batch_x = batch_x.to(device)
+            batch_y = batch_y.to(device)
             optimizer.zero_grad()
             outputs = model(batch_x)
             loss = criterion(outputs, batch_y)
@@ -77,6 +77,8 @@ def train_and_log(train_loader, val_loader, params, fd_key):
     val_losses = []
     with torch.no_grad():
         for batch_x, batch_y in val_loader:
+            batch_x = batch_x.to(device)
+            batch_y = batch_y.to(device)
             outputs = model(batch_x)
             loss = criterion(outputs, batch_y)
             val_losses.append(loss.item())
@@ -101,5 +103,5 @@ if __name__ == "__main__":
     for fd_key in fd_keys:
         print(f"Training on {fd_key}...")
         train_loader = load_cmapss_data(config, fd_key, seq_len=seq_len)
-        val_loader = train_loader  
+        val_loader = train_loader
         train_and_log(train_loader, val_loader, params, fd_key)
