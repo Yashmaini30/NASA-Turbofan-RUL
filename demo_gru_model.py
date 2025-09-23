@@ -31,6 +31,42 @@ def calculate_rul(df):
         df.loc[df['unit_number'] == unit, 'rul'] = max_cycle - df.loc[df['unit_number'] == unit, 'time_in_cycles']
     return df
 
+def load_real_cmapss_data():
+    """Load and prepare real NASA C-MAPSS data with proper column mapping."""
+    train_data, test_data, rul_data = load_dataset('FD001', 'CMAPSSData')
+    
+    if train_data is not None:
+        # Assign proper column names to match expected format
+        # NASA C-MAPSS format: unit_id, time_cycles, setting1-3, sensor1-21
+        expected_columns = (
+            ['unit_number', 'time_in_cycles'] + 
+            [f'setting_{i}' for i in range(1, 4)] + 
+            [f'sensor_{i}' for i in range(1, 22)]
+        )
+        
+        # Ensure we have the right number of columns
+        if train_data.shape[1] >= len(expected_columns):
+            train_data = train_data.iloc[:, :len(expected_columns)]  # Take first 26 columns
+            train_data.columns = expected_columns
+            
+            # Calculate RUL for training data
+            train_data['rul'] = 0
+            for unit in train_data['unit_number'].unique():
+                unit_mask = train_data['unit_number'] == unit
+                max_cycle = train_data.loc[unit_mask, 'time_in_cycles'].max()
+                train_data.loc[unit_mask, 'rul'] = max_cycle - train_data.loc[unit_mask, 'time_in_cycles']
+            
+            print(f"✅ Real NASA C-MAPSS data loaded successfully!")
+            print(f"   Engines: {train_data['unit_number'].nunique()}")
+            print(f"   Total samples: {len(train_data)}")
+            print(f"   RUL range: {train_data['rul'].min():.0f} - {train_data['rul'].max():.0f} cycles")
+            
+            return train_data
+        else:
+            print(f"❌ Unexpected number of columns: {train_data.shape[1]}, expected at least {len(expected_columns)}")
+            
+    return None
+
 def demonstrate_gru_pipeline():
     """Complete demonstration of GRU model pipeline."""
     print("🚀 GRU Model Demonstration - NASA C-MAPSS Dataset")
@@ -38,20 +74,16 @@ def demonstrate_gru_pipeline():
     
     # 1. Load Real Data
     print("\n📊 Step 1: Loading NASA C-MAPSS Data...")
-    try:
-        train_data, test_data, rul_data = load_dataset('FD001', 'CMAPSSData')
-        if train_data is not None:
-            # Add RUL column to training data
-            train_data = calculate_rul(train_data)
-            print(f"✅ Loaded training data: {len(train_data)} samples, {train_data['unit_number'].nunique()} engines")
-            print(f"   Columns: {list(train_data.columns)}")
-            print(f"   Sample engine lifecycles: {train_data.groupby('unit_number')['time_in_cycles'].max().head()}")
-        else:
-            raise Exception("Data loading returned None")
-    except Exception as e:
-        print(f"❌ Error loading data: {e}")
-        print("📝 Using synthetic data for demonstration...")
+    train_data = load_real_cmapss_data()
+    
+    if train_data is None:
+        print("📝 Real data loading failed, using synthetic data for demonstration...")
         train_data = create_demo_data()
+    else:
+        print(f"   Sample from real data:")
+        print(f"   Columns: {list(train_data.columns)}")
+        sample_lifecycles = train_data.groupby('unit_number')['time_in_cycles'].max().head()
+        print(f"   Sample engine lifecycles: {dict(sample_lifecycles)}")
     
     # 2. Data Preprocessing
     print("\n🔧 Step 2: Feature Engineering Pipeline...")
