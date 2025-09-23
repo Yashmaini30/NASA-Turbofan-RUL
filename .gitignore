@@ -8,3 +8,32 @@ __pycache__/
 src\data\__pycache__\load_data.cpython-311.pyc
 artifacts/
 .env
+plan.md
+
+# Test files
+test_*.py
+*_test.py
+quick_*.py
+
+# Model checkpoints and outputs
+checkpoints/
+runs/
+logs/
+*.pth
+*.pkl
+*.joblib
+
+# Data files
+data/
+*.csv
+*.txt
+*.h5
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
