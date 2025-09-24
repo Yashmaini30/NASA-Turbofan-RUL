@@ -88,13 +88,12 @@ class GRUModel(nn.Module):
                 # Hidden-to-hidden weights
                 nn.init.orthogonal_(param.data)
             elif 'bias' in name:
-                # Bias initialization
+                # Simple bias initialization for GRU
                 param.data.fill_(0)
-                # Set forget gate bias to 1 (though GRU doesn't have forget gates,
-                # this is good practice for RNN initialization)
-                n = param.size(0)
-                start, end = n // 4, n // 2
-                param.data[start:end].fill_(1.)
+                # For GRU: set reset gate bias to small positive value
+                if 'bias_ih' in name:
+                    n = param.size(0)
+                    param.data[n//3:2*n//3].fill_(1.0)  # Reset gate bias
     
     def forward(self, x: torch.Tensor, hidden: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
@@ -119,8 +118,8 @@ class GRUModel(nn.Module):
         # Apply dropout
         last_output = self.dropout_layer(last_output)
         
-        # Final prediction
-        output = self.fc(last_output)  # Shape: (batch_size, output_dim)
+        # Final prediction with sigmoid activation for [0,1] output range
+        output = torch.sigmoid(self.fc(last_output))  # Shape: (batch_size, output_dim)
         
         return output
     
@@ -317,7 +316,7 @@ class ImprovedGRUModel(GRUModel):
         # Apply dropout
         last_output = self.dropout_layer(last_output)
         
-        # Enhanced output prediction
-        output = self.fc_enhanced(last_output)
+        # Enhanced output prediction with sigmoid
+        output = torch.sigmoid(self.fc_enhanced(last_output))  # Add sigmoid here
         
         return output
