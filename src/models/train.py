@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from src.models.lstm_model import LSTMModel
+from src.models.gru_trainer import GRUTrainer
 from src.models.mlflow_utils import MLflowTracker
 
 def load_config(config_path):
@@ -55,10 +56,10 @@ def load_cmapss_data(config, fd_key, seq_len=30):
     loader = DataLoader(dataset, batch_size=64, shuffle=True)
     return loader
 
-def train_and_log(train_loader, val_loader, params, fd_key):
+def train_and_log(model_class, train_loader, val_loader, params, fd_key, model_name):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_params = {k: params[k] for k in ["input_dim", "hidden_dim", "num_layers", "output_dim", "dropout"]}
-    model = LSTMModel(**model_params).to(device)
+    model = model_class(**model_params).to(device)
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=params.get("lr", 1e-3))
 
@@ -85,7 +86,29 @@ def train_and_log(train_loader, val_loader, params, fd_key):
     val_rmse = (sum(val_losses) / len(val_losses)) ** 0.5
 
     metrics = {"val_rmse": val_rmse}
-    MLflowTracker.track_model(f"LSTM_{fd_key}", model, metrics, params, framework="pytorch")
+    MLflowTracker.track_model(f"{model_name}_{fd_key}", model, metrics, params, framework="pytorch")
+    print(f"{model_name} {fd_key} RMSE: {val_rmse:.2f}")
+
+
+def train_and_log_gru(fd_key, sequence_length, config):
+    trainer = GRUTrainer(
+        dataset=fd_key,
+        sequence_length=sequence_length,
+        config=config
+    )
+    results = trainer.run_complete_pipeline()
+    if results:
+        # Log to MLflow/DagsHub
+        MLflowTracker.track_model(
+            f"GRU_{fd_key}",
+            trainer.model,
+            {"val_rmse": results['rmse']},
+            config['model'],
+            framework="pytorch"
+        )
+        print(f"GRU {fd_key} RMSE: {results['rmse']:.2f}")
+    else:
+        print(f"GRU {fd_key} training failed!")
 
 if __name__ == "__main__":
     config = load_config("config.yaml")
@@ -100,8 +123,37 @@ if __name__ == "__main__":
         "epochs": 10
     }
     seq_len = 30
+
+    # GRU config for trainer
+    gru_config = {
+        'model': {
+            'hidden_dim': 128,
+            'num_layers': 2,
+            'dropout': 0.2,
+            'bidirectional': False
+        },
+        'training': {
+            'learning_rate': 1e-3,
+            'weight_decay': 0.01,
+            'epochs': 10,
+            'patience': 15,
+            'scheduler_patience': 5,
+            'scheduler_factor': 0.5,
+            'gradient_clip': 1.0
+        },
+        'data': {
+            'train_ratio': 0.7,
+            'val_ratio': 0.15,
+            'test_ratio': 0.15,
+            'normalization': 'standard'
+        }
+    }
+
     for fd_key in fd_keys:
-        print(f"Training on {fd_key}...")
+        print(f"\nTraining LSTM on {fd_key}...")
         train_loader = load_cmapss_data(config, fd_key, seq_len=seq_len)
         val_loader = train_loader
-        train_and_log(train_loader, val_loader, params, fd_key)
+        train_and_log(LSTMModel, train_loader, val_loader, params, fd_key, "LSTM")
+
+        print(f"Training GRU on {fd_key}...")
+        train_and_log_gru(fd_key, seq_len, gru_config)
