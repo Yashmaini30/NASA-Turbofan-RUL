@@ -100,7 +100,7 @@ def add_linear_rul(df):
     max_cycles.columns = ['unit_id', 'max_cycle']
     
     df_rul = df_rul.merge(max_cycles, on='unit_id', how='left')
-    df_rul['RUL'] = df_rul['max_cycle'] - df_rul['time_cycles']
+    df_rul['RUL'] = (df_rul['max_cycle'] - df_rul['time_cycles']).astype(float)
     df_rul.drop('max_cycle', axis=1, inplace=True)
     
     return df_rul
@@ -122,8 +122,8 @@ def add_piecewise_rul(df, early_rul=125):
     """
     df_rul = add_linear_rul(df)
     
-    # Clip RUL at early_rul threshold
-    df_rul['RUL'] = df_rul['RUL'].clip(upper=early_rul)
+    # Clip RUL at early_rul threshold and ensure float type
+    df_rul['RUL'] = df_rul['RUL'].clip(upper=early_rul).astype(float)
     
     return df_rul
 
