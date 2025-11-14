@@ -122,22 +122,17 @@ def train_tft_model(
     )
     
     # Learning rate finder (optional but recommended)
-    print("\nFinding optimal learning rate...")
-    try:
-        res = trainer.tuner.lr_find(
-            model,
-            train_dataloaders=train_dataloader,
-            val_dataloaders=val_dataloader,
-            min_lr=1e-6,
-            max_lr=1e-1
-        )
-        
-        suggested_lr = res.suggestion()
-        print(f"Suggested learning rate: {suggested_lr}")
-        model.learning_rate = suggested_lr
-    except Exception as e:
-        print(f"Learning rate finder failed: {e}")
-        print(f"Using provided learning rate: {learning_rate}")
+    print("\nSkipping learning rate finder - using provided learning rate")
+    print(f"Learning rate: {learning_rate}")
+    # Note: lr_find requires Tuner which may not be available in all Lightning versions
+    # Uncomment below if you have compatible Lightning version
+    # try:
+    #     from lightning.pytorch.tuner import Tuner
+    #     tuner = Tuner(trainer)
+    #     res = tuner.lr_find(model, train_dataloader, val_dataloader)
+    #     model.learning_rate = res.suggestion()
+    # except Exception as e:
+    #     print(f"LR finder unavailable: {e}")
     
     # Train
     print("\nStarting training...")
