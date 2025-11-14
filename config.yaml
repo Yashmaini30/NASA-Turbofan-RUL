@@ -32,10 +32,10 @@ eda:
 
 model:
   lstm:
-    hidden_dim: 128
+    hidden_dim: 256
     num_layers: 2
     dropout: 0.2
-    bidirectional: false
+    bidirectional: true
   
   sequence_length: 50
   

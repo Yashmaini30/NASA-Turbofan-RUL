@@ -94,11 +94,11 @@ def create_lstm_model(input_dim, config=None):
     
     # Default hyperparameters
     defaults = {
-        'hidden_dim': 128,
+        'hidden_dim': 256,
         'num_layers': 2,
         'output_dim': 1,
         'dropout': 0.2,
-        'bidirectional': False
+        'bidirectional': True
     }
     
     # Merge with provided config
