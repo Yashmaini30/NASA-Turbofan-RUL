@@ -185,7 +185,7 @@ def main():
     
     # Load best model and evaluate
     print("\n=== Evaluation ===")
-    checkpoint = torch.load(save_path)
+    checkpoint = torch.load(save_path, weights_only=False)
     model.load_state_dict(checkpoint['model_state'])
     
     train_metrics = evaluate(model, train_loader, device)
