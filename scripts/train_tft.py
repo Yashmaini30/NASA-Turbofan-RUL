@@ -97,17 +97,30 @@ def main(args):
     train_df = prepare_for_tft(train_df, is_train=True)
     test_df = prepare_for_tft(test_df, is_train=False)
     
-    # Split train/validation
+    # Split train/validation by time instead of by engine
+    # This ensures all engines are in both sets but at different time points
     print(f"  ✓ Splitting train/validation (ratio: {args.val_split})...")
-    unique_engines = train_df['unit_id'].unique()
-    n_val_engines = int(len(unique_engines) * args.val_split)
-    val_engines = np.random.choice(unique_engines, n_val_engines, replace=False)
     
-    val_df = train_df[train_df['unit_id'].isin(val_engines)].copy()
-    train_df = train_df[~train_df['unit_id'].isin(val_engines)].copy()
+    # For each engine, take last portion as validation
+    train_list = []
+    val_list = []
     
-    print(f"  ✓ Train engines: {train_df['unit_id'].nunique()}")
-    print(f"  ✓ Val engines: {val_df['unit_id'].nunique()}")
+    for engine_id in train_df['unit_id'].unique():
+        engine_data = train_df[train_df['unit_id'] == engine_id].copy()
+        n_samples = len(engine_data)
+        n_val = int(n_samples * args.val_split)
+        
+        if n_val > 0:
+            train_list.append(engine_data.iloc[:-n_val])
+            val_list.append(engine_data.iloc[-n_val:])
+        else:
+            train_list.append(engine_data)
+    
+    train_df = pd.concat(train_list, ignore_index=True)
+    val_df = pd.concat(val_list, ignore_index=True) if val_list else train_df.iloc[:0]
+    
+    print(f"  ✓ Train samples: {len(train_df)}")
+    print(f"  ✓ Val samples: {len(val_df)}")
     
     # =====================
     # 6. TRAIN MODEL
