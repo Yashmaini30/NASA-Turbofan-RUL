@@ -9,6 +9,7 @@ src\data\__pycache__\load_data.cpython-311.pyc
 artifacts/
 .env
 plan.md
+tft-env
 
 # Test files
 test_*.py
