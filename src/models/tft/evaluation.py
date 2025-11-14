@@ -78,41 +78,30 @@ def evaluate_model(model, test_dataset, test_df, rul_df):
     predictions = model.predict(
         test_dataset,
         mode='prediction',
-        return_x=True
+        return_index=True,
+        return_decoder_lengths=True
     )
+    
+    # predictions is now a tuple: (predictions_tensor, index)
+    pred_values = predictions[0]  # Shape: (n_samples, prediction_length, n_quantiles)
+    pred_index = predictions[1]   # DataFrame with decoder info
     
     # Extract predictions and actuals
     # Get last prediction for each engine
     test_predictions = []
     test_actuals = []
     
+    # Group by unit_id and get last prediction
     for unit_id in test_df['unit_id'].unique():
-        unit_data = test_df[test_df['unit_id'] == unit_id]
-        last_time_idx = unit_data['time_idx'].max()
+        # Find indices for this engine in predictions
+        engine_mask = pred_index['unit_id'] == unit_id
         
-        # Get prediction for last timestep
-        # predictions[1] contains the decoder information
-        pred_mask = (
-            (predictions[1]['decoder_target'] == unit_id).cpu().numpy() if hasattr(predictions[1]['decoder_target'], 'cpu')
-            else (predictions[1]['decoder_target'] == unit_id)
-        )
-        
-        time_mask = (
-            (predictions[1]['decoder_time_idx'] == last_time_idx).cpu().numpy() if hasattr(predictions[1]['decoder_time_idx'], 'cpu')
-            else (predictions[1]['decoder_time_idx'] == last_time_idx)
-        )
-        
-        pred_idx = pred_mask & time_mask
-        
-        if pred_idx.any():
-            # predictions[0] shape: (batch, prediction_length, quantiles)
-            # We use median quantile (index 1 for [0.1, 0.5, 0.9])
-            pred_tensor = predictions[0][pred_idx]
-            if hasattr(pred_tensor, 'cpu'):
-                pred_rul = pred_tensor.cpu().numpy()[0, 0, 1]
-            else:
-                pred_rul = pred_tensor[0, 0, 1]
+        if engine_mask.sum() > 0:
+            # Get the last prediction for this engine (highest time_idx)
+            engine_preds_idx = pred_index[engine_mask].index[-1]
             
+            # Extract median quantile prediction (index 1 for [0.1, 0.5, 0.9])
+            pred_rul = pred_values[engine_preds_idx, 0, 1].item()
             test_predictions.append(pred_rul)
             
             # Get actual RUL from ground truth
