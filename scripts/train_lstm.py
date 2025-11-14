@@ -139,7 +139,16 @@ def evaluate(model, loader, device='cuda'):
             'predictions': predictions, 'actuals': actuals}
 
 
-def main():
+def main(dataset_id='FD001'):
+    """
+    Train LSTM model on specified C-MAPSS dataset.
+    
+    Args:
+        dataset_id: One of 'FD001', 'FD002', 'FD003', 'FD004'
+        
+    Returns:
+        dict: Test metrics (rmse, mae, nasa_score)
+    """
     # Load config
     with open('config.yaml') as f:
         config = yaml.safe_load(f)
@@ -149,7 +158,7 @@ def main():
     
     # Prepare data
     print("\n=== Loading Data ===")
-    data = prepare_data('FD001', add_features=config['dataset'].get('add_features', False))
+    data = prepare_data(dataset_id, add_features=config['dataset'].get('add_features', False))
     train_df, test_df = data['train'], data['test']
     
     # Create sequences
@@ -178,7 +187,7 @@ def main():
     # Train
     print("\n=== Training ===")
     Path('models/lstm').mkdir(parents=True, exist_ok=True)
-    save_path = 'models/lstm/best_model_FD001.pth'
+    save_path = f'models/lstm/best_model_{dataset_id}.pth'
     
     trainer = Trainer(model, config['training'], device)
     trainer.fit(train_loader, val_loader, config['training']['epochs'], save_path)
@@ -197,12 +206,14 @@ def main():
     print(f"Test  - RMSE: {test_metrics['rmse']:.2f}, MAE: {test_metrics['mae']:.2f}, Score: {test_metrics['nasa_score']:.0f}")
     
     # Save results
-    np.savez(f'models/lstm/results_FD001.npz',
+    np.savez(f'models/lstm/results_{dataset_id}.npz',
              train_pred=train_metrics['predictions'], train_actual=train_metrics['actuals'],
              val_pred=val_metrics['predictions'], val_actual=val_metrics['actuals'],
              test_pred=test_metrics['predictions'], test_actual=test_metrics['actuals'])
     
     print(f"\nResults saved to models/lstm/")
+    
+    return test_metrics
 
 
 if __name__ == '__main__':
