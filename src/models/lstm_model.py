@@ -4,7 +4,7 @@ import torch.nn as nn
 class LSTMModel(nn.Module):
     """LSTM model for RUL prediction with configurable architecture."""
     
-    def __init__(self, input_dim, hidden_dim=128, num_layers=2, output_dim=1, 
+    def __init__(self, input_dim, hidden_dim=256, num_layers=2, output_dim=1, 
                  dropout=0.2, bidirectional=False):
         """
         Args:
