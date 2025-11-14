@@ -1,5 +1,6 @@
 dataset:
   data_dir: "CMAPSSData"
+  add_features: true  # Enable advanced feature engineering (diff, rolling stats)
 
   files:
     FD001:
@@ -37,7 +38,7 @@ model:
     dropout: 0.2
     bidirectional: true
   
-  sequence_length: 50
+  sequence_length: 70  # Longer sequences to capture approach-to-failure trends
   
 training:
   batch_size: 64

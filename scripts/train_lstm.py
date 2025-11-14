@@ -149,7 +149,7 @@ def main():
     
     # Prepare data
     print("\n=== Loading Data ===")
-    data = prepare_data('FD001')
+    data = prepare_data('FD001', add_features=config['dataset'].get('add_features', False))
     train_df, test_df = data['train'], data['test']
     
     # Create sequences

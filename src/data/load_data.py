@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import MinMaxScaler
+from src.feature_engineering.advanced_features import engineer_advanced_features
 
 
 def load_cmapss_data(dataset_id="FD001", data_dir="CMAPSSData"):
@@ -50,9 +51,23 @@ def normalize_data(train, test):
     return train, test, scaler
 
 
-def prepare_data(dataset_id="FD001", data_dir="CMAPSSData"):
-    """Complete preprocessing pipeline."""
+def prepare_data(dataset_id="FD001", data_dir="CMAPSSData", add_features=False):
+    """
+    Complete preprocessing pipeline.
+    
+    Args:
+        dataset_id: Dataset identifier (FD001, FD002, etc.)
+        data_dir: Directory containing CMAPSS data
+        add_features: If True, add advanced engineered features
+    """
     train, test = load_cmapss_data(dataset_id, data_dir)
+    
+    # Add advanced features if requested
+    if add_features:
+        print("\n=== Engineering Advanced Features ===")
+        train, train_new_feats = engineer_advanced_features(train, feature_types=['diff'])
+        test, test_new_feats = engineer_advanced_features(test, feature_types=['diff'])
+    
     train, test, dropped_cols = remove_constant_features(train, test)
     train, test, scaler = normalize_data(train, test)
     
