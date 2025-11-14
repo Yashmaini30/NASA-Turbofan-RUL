@@ -7,14 +7,4 @@ This package provides tools for transforming raw sensor data into ML-ready featu
 - Train/validation/test splits with temporal consistency
 """
 
-from .sequence_generator import SequenceGenerator
-from .data_splitter import DataSplitter
-from .normalizer import DataNormalizer
-
-__all__ = [
-    'SequenceGenerator',
-    'DataSplitter', 
-    'DataNormalizer'
-]
-
-__version__ = '1.0.0'
+from .sequences import create_sequences, prepare_train_data, prepare_test_data, TurbofanDataset

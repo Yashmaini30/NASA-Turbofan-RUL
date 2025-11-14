@@ -1,5 +1,6 @@
 dataset:
   data_dir: "CMAPSSData"
+  add_features: true  # Enable advanced feature engineering (diff, rolling stats)
 
   files:
     FD001:
@@ -29,3 +30,29 @@ columns:
 
 eda:
   output_dir: "artifacts/eda"
+
+model:
+  lstm:
+    hidden_dim: 256
+    num_layers: 2
+    dropout: 0.2
+    bidirectional: true
+  
+  sequence_length: 70  # Longer sequences to capture approach-to-failure trends
+  
+training:
+  batch_size: 64
+  epochs: 100
+  learning_rate: 0.001
+  val_split: 0.2
+  early_stopping_patience: 10
+  gradient_clip: 5.0
+  
+  optimizer: "adam"
+  loss_function: "mse"
+  
+  scheduler:
+    type: "reduce_on_plateau"
+    factor: 0.5
+    patience: 5
+    min_lr: 0.00001
