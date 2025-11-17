@@ -9,7 +9,7 @@ from train_lstm import main as train_lstm
 
 # Datasets to train on
 DATASETS = ['FD001', 'FD002', 'FD003', 'FD004']
-
+ 
 # Dataset characteristics
 DATASET_INFO = {
     'FD001': {'engines': 100, 'conditions': 1, 'faults': 1, 'difficulty': 'Easy'},

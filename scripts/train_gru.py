@@ -47,7 +47,7 @@ class Trainer:
             pred = self.model(X).squeeze()
             loss = self.criterion(pred, y)
             loss.backward()
-            
+             
             # Gradient clipping
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config['gradient_clip'])
             
