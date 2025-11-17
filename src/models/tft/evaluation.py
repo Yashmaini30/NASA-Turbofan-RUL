@@ -75,16 +75,24 @@ def evaluate_model(model, test_dataset, test_df, rul_df):
         test_actuals: Array of actual RUL values
     """
     # Generate predictions
-    predictions = model.predict(
+    raw_predictions = model.predict(
         test_dataset,
         mode='prediction',
         return_index=True,
         return_decoder_lengths=True
     )
     
-    # predictions is now a tuple: (predictions_tensor, index)
-    pred_values = predictions[0]  # Shape: (n_samples, prediction_length, n_quantiles)
-    pred_index = predictions[1]   # DataFrame with decoder info
+    # Handle different prediction return formats
+    if isinstance(raw_predictions, tuple):
+        pred_values = raw_predictions[0]  # Shape: (n_samples, prediction_length, n_quantiles)
+        pred_index = raw_predictions[1] if len(raw_predictions) > 1 else None
+    else:
+        pred_values = raw_predictions
+        pred_index = None
+    
+    # If index not available, create it from test_df
+    if pred_index is None:
+        pred_index = test_df.reset_index(drop=True)[['unit_id', 'time_idx']]
     
     # Extract predictions and actuals
     # Get last prediction for each engine
