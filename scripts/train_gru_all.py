@@ -8,7 +8,7 @@ from datetime import datetime
 from train_gru import main as train_gru
 
 DATASETS = ['FD001', 'FD002', 'FD003', 'FD004']
-
+ 
 DATASET_INFO = {
     'FD001': {'engines': 100, 'conditions': 1, 'faults': 1, 'difficulty': 'Easy'},
     'FD002': {'engines': 260, 'conditions': 6, 'faults': 1, 'difficulty': 'Medium'},
