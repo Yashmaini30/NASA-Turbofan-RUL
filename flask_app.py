@@ -46,6 +46,11 @@ def load_analysis_data():
                 'description': 'Sophisticated analytical techniques and uncertainty quantification',
                 'sections': ['PCA Analysis', 'Drift Detection', 'Uncertainty Baseline', 'Statistical Failure Analysis']
             },
+            'model_results': {
+                'name': 'Model Performance Analysis',
+                'description': 'Evaluation of LSTM model predictions and error analysis',
+                'sections': ['Actual vs Predicted', 'Error Distribution', 'Residual Analysis', 'Prediction Bias']
+            },
             'data_quality': {
                 'name': 'Data Quality Assessment',
                 'description': 'Comprehensive data validation and quality metrics',
@@ -76,6 +81,7 @@ def get_available_plots():
         'overview': [],
         'basic_eda': {},
         'advanced_analysis': {},
+        'model_results': {},
         'data_quality': []
     }
     
@@ -91,6 +97,7 @@ def get_available_plots():
     for dataset in DATASET_NAMES:
         plots['basic_eda'][dataset] = []
         plots['advanced_analysis'][dataset] = []
+        plots['model_results'][dataset] = []
         
         # Basic EDA plots
         basic_patterns = ['lifecycles', 'sensor_correlations', 'degradation_patterns', 'failure_patterns']
@@ -106,6 +113,13 @@ def get_available_plots():
             file = f"{dataset}_{pattern}.png"
             if (reports_dir / file).exists():
                 plots['advanced_analysis'][dataset].append(file)
+
+        # Model Result plots
+        if dataset == 'FD001':
+             model_files = ['lstm_actual_vs_predicted.png', 'lstm_error_distribution.png', 'lstm_residuals.png', 'lstm_prediction_bias.png']
+             for file in model_files:
+                if (reports_dir / 'figures' / file).exists():
+                    plots['model_results'][dataset].append(f"figures/{file}")
     
     return plots
 
@@ -187,7 +201,7 @@ def dataset_stats_api(dataset_name):
     
     return jsonify(stats)
 
-@app.route('/reports/<filename>')
+@app.route('/reports/<path:filename>')
 def serve_reports(filename):
     """Serve report images from the reports directory."""
     return send_from_directory(str(REPORTS_PATH), filename)

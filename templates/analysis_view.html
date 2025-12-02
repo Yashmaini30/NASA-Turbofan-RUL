@@ -60,6 +60,14 @@
                                     - Operating condition variability and baseline uncertainty
                                 {% elif analysis_type == 'advanced_analysis' and 'Statistical' in section %}
                                     - Advanced statistical tests and failure pattern analysis
+                                {% elif analysis_type == 'model_results' and 'Actual' in section %}
+                                    - Comparison of predicted RUL values against ground truth
+                                {% elif analysis_type == 'model_results' and 'Error' in section %}
+                                    - Analysis of prediction error frequency and distribution
+                                {% elif analysis_type == 'model_results' and 'Residual' in section %}
+                                    - Investigation of error patterns across engine lifetime
+                                {% elif analysis_type == 'model_results' and 'Bias' in section %}
+                                    - Assessment of conservative vs optimistic prediction tendencies
                                 {% elif analysis_type == 'data_quality' and 'Quality' in section %}
                                     - Comprehensive data validation and integrity checks
                                 {% elif analysis_type == 'data_quality' and 'Outlier' in section %}
@@ -79,6 +87,9 @@
                             {% elif analysis_type == 'advanced_analysis' %}
                                 <i class="fas fa-brain display-1 text-warning opacity-25"></i>
                                 <h6 class="mt-3 text-muted">Advanced Methods</h6>
+                            {% elif analysis_type == 'model_results' %}
+                                <i class="fas fa-chart-line display-1 text-primary opacity-25"></i>
+                                <h6 class="mt-3 text-muted">Model Performance</h6>
                             {% else %}
                                 <i class="fas fa-shield-alt display-1 text-info opacity-25"></i>
                                 <h6 class="mt-3 text-muted">Quality Assurance</h6>
@@ -207,6 +218,47 @@
                                 </div>
                             </div>
                             {% endfor %}
+                        {% elif analysis_type == 'model_results' and plots.model_results[dataset] %}
+                            {% for plot in plots.model_results[dataset] %}
+                            <div class="col-lg-6 mb-4">
+                                <div class="card viz-card border-0 shadow-sm">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-chart-line me-2"></i>
+                                            {% if 'actual_vs_predicted' in plot %}
+                                                Actual vs Predicted RUL
+                                            {% elif 'error_distribution' in plot %}
+                                                Prediction Error Distribution
+                                            {% elif 'residuals' in plot %}
+                                                Residual Analysis
+                                            {% elif 'prediction_bias' in plot %}
+                                                Prediction Bias
+                                            {% else %}
+                                                {{ plot.replace('figures/', '').replace('lstm_', '').replace('_', ' ').replace('.png', '').title() }}
+                                            {% endif %}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <img src="{{ url_for('static', filename='../reports/' + plot) }}" 
+                                             class="img-fluid rounded shadow-sm" 
+                                             alt="{{ plot }}"
+                                             style="max-height: 400px; cursor: pointer;"
+                                             onclick="showImageModal(this)">
+                                        <p class="mt-2 text-muted small">
+                                            {% if 'actual_vs_predicted' in plot %}
+                                                Comparison of predicted RUL values against actual ground truth. Points closer to the diagonal red line indicate better predictions.
+                                            {% elif 'error_distribution' in plot %}
+                                                Histogram showing the frequency of prediction errors. A centered distribution around zero indicates unbiased predictions.
+                                            {% elif 'residuals' in plot %}
+                                                Scatter plot of errors vs actual RUL. Helps identify if the model performs differently at different stages of engine life.
+                                            {% elif 'prediction_bias' in plot %}
+                                                Breakdown of early (conservative) vs late (optimistic) predictions. Early predictions are generally safer for maintenance.
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
                         {% elif analysis_type == 'data_quality' %}
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm">
@@ -229,28 +281,49 @@
                                     <i class="fas fa-info-circle me-2"></i>
                                     No visualizations available for {{ dataset }} in this analysis category.
                                 </div>
-                            </div>
-                        {% endif %}
+                {% elif analysis_type == 'advanced_analysis' %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-warning">Advanced Insights:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-brain text-warning me-2"></i><strong>PCA Analysis:</strong> Dimensionality reduction effectiveness</li>
+                            <li class="mb-2"><i class="fas fa-brain text-warning me-2"></i><strong>Data Drift:</strong> Distribution differences between train/test</li>
+                            <li class="mb-2"><i class="fas fa-brain text-warning me-2"></i><strong>Uncertainty:</strong> Operating condition variability</li>
+                            <li class="mb-2"><i class="fas fa-brain text-warning me-2"></i><strong>Statistical Tests:</strong> Significant failure indicators</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-danger">Critical Considerations:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Address data drift through domain adaptation</li>
+                            <li class="mb-2"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Use PCA for feature engineering</li>
+                            <li class="mb-2"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Consider uncertainty in predictions</li>
+                            <li class="mb-2"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Bootstrap for confidence intervals</li>
+                        </ul>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-
-<!-- Analysis Insights -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-lightbulb me-2"></i>Key Insights & Interpretation
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if analysis_type == 'basic_eda' %}
+                {% elif analysis_type == 'model_results' %}
                 <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-primary">Performance Metrics:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i><strong>RMSE:</strong> Root Mean Square Error indicates average prediction deviation</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i><strong>MAE:</strong> Mean Absolute Error shows average magnitude of errors</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i><strong>NASA Score:</strong> Penalizes late predictions more heavily than early ones</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i><strong>Bias:</strong> Tendency to over-predict or under-predict RUL</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-success">Model Strengths:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-star text-success me-2"></i>Effective capture of degradation trends</li>
+                            <li class="mb-2"><i class="fas fa-star text-success me-2"></i>Balanced error distribution</li>
+                            <li class="mb-2"><i class="fas fa-star text-success me-2"></i>Conservative predictions for safety</li>
+                            <li class="mb-2"><i class="fas fa-star text-success me-2"></i>Robustness across different engine units</li>
+                        </ul>
+                    </div>
+                </div>
+                {% else %}="row">
                     <div class="col-md-6">
                         <h6 class="fw-bold text-success">What to Look For:</h6>
                         <ul class="list-unstyled">
