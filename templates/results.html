@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Results Showcase - NASA Turbofan RUL{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-16">
+        <h1 class="text-4xl font-bold text-slate-900 mb-4">Model Performance Results</h1>
+        <p class="text-xl text-slate-500 max-w-2xl mx-auto">
+            Showcasing the predictive capabilities of our Bidirectional LSTM and GRU models on the FD001 dataset.
+        </p>
+    </div>
+
+    <!-- 1. Hero Performance -->
+    <section class="mb-20">
+        <div class="flex items-center gap-4 mb-8">
+            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">1</div>
+            <h2 class="text-2xl font-bold text-slate-800">State-of-the-Art Performance</h2>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 transform hover:scale-[1.01] transition-transform duration-300">
+            <div class="p-2 bg-slate-50 border-b border-slate-100 flex justify-between items-center px-6 py-3">
+                <span class="text-sm font-medium text-slate-500">Figure 1: LSTM Hero Shot</span>
+                <button onclick="showImageModal(this.parentElement.nextElementSibling)" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    <i class="fas fa-expand mr-1"></i> Full Screen
+                </button>
+            </div>
+            <img src="{{ url_for('serve_reports', filename='figures/fig_6_2_1_lstm_hero_performance.png') }}" 
+                 alt="LSTM Hero Performance" 
+                 class="w-full h-auto cursor-pointer"
+                 onclick="showImageModal(this)">
+            <div class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="font-bold text-slate-800 mb-2">High Accuracy</h3>
+                        <p class="text-slate-600 text-sm">
+                            The model maintains tight predictions along the perfect prediction line (dashed black), with most errors contained within the ±20 cycle safety bounds.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 mb-2">Safety Bias</h3>
+                        <p class="text-slate-600 text-sm">
+                            The error distribution shows a slight conservative bias (early predictions), which is preferred in predictive maintenance to prevent catastrophic failures.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 mb-2">Key Metric</h3>
+                        <p class="text-slate-600 text-sm">
+                            Achieved a NASA Score of <strong>1,277</strong>, representing an 85.4% improvement over the baseline unidirectional model.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Comprehensive Comparison -->
+    <section class="mb-20">
+        <div class="flex items-center gap-4 mb-8">
+            <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">2</div>
+            <h2 class="text-2xl font-bold text-slate-800">Model Comparison: LSTM vs GRU</h2>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+            <div class="p-2 bg-slate-50 border-b border-slate-100 flex justify-between items-center px-6 py-3">
+                <span class="text-sm font-medium text-slate-500">Figure 2: Comprehensive Comparison</span>
+                <button onclick="showImageModal(this.parentElement.nextElementSibling)" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    <i class="fas fa-expand mr-1"></i> Full Screen
+                </button>
+            </div>
+            <img src="{{ url_for('serve_reports', filename='figures/fig_6_2_2_comprehensive_comparison.png') }}" 
+                 alt="Model Comparison Dashboard" 
+                 class="w-full h-auto cursor-pointer"
+                 onclick="showImageModal(this)">
+            <div class="p-8 bg-slate-50">
+                <div class="flex flex-col md:flex-row gap-6 items-center justify-center">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex-1">
+                        <div class="text-indigo-600 font-bold mb-1">LSTM Strength</div>
+                        <div class="text-sm text-slate-600">Better NASA Score (Safety)</div>
+                    </div>
+                    <div class="text-slate-400 font-bold">VS</div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex-1">
+                        <div class="text-orange-500 font-bold mb-1">GRU Strength</div>
+                        <div class="text-sm text-slate-600">Better RMSE (Raw Accuracy)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Improvement Journey -->
+    <section class="mb-20">
+        <div class="flex items-center gap-4 mb-8">
+            <div class="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">3</div>
+            <h2 class="text-2xl font-bold text-slate-800">Development Timeline</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100">
+                <div class="p-2 bg-slate-50 border-b border-slate-100 px-6 py-3">
+                    <span class="text-sm font-medium text-slate-500">Improvement Timeline</span>
+                </div>
+                <img src="{{ url_for('serve_reports', filename='figures/fig_6_2_3_improvement_timeline.png') }}" 
+                     alt="Improvement Timeline" 
+                     class="w-full h-auto cursor-pointer hover:opacity-95 transition"
+                     onclick="showImageModal(this)">
+            </div>
+            <div class="flex flex-col justify-center space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-red-500">
+                    <h4 class="font-bold text-slate-800">Baseline</h4>
+                    <p class="text-slate-600 text-sm mt-1">Unidirectional LSTM provided a starting NASA score of 9,324.</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-orange-500">
+                    <h4 class="font-bold text-slate-800">Bidirectional Architecture</h4>
+                    <p class="text-slate-600 text-sm mt-1">Switching to Bidirectional layers yielded the largest single jump (69.3% improvement).</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-emerald-500">
+                    <h4 class="font-bold text-slate-800">Final Optimization</h4>
+                    <p class="text-slate-600 text-sm mt-1">Feature engineering (First-diff) and sequence length tuning (70) brought the final score to 1,277.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Executive Summary -->
+    <section class="mb-12">
+        <div class="bg-slate-900 rounded-3xl p-8 md:p-12 text-center text-white shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+            
+            <h2 class="text-3xl font-bold mb-8 relative z-10">Executive Summary</h2>
+            <div class="max-w-4xl mx-auto bg-white/10 backdrop-blur-md rounded-xl p-2 relative z-10">
+                <img src="{{ url_for('serve_reports', filename='figures/fig_6_2_5_executive_summary.png') }}" 
+                     alt="Executive Summary" 
+                     class="w-full h-auto rounded-lg shadow-lg cursor-pointer"
+                     onclick="showImageModal(this)">
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
