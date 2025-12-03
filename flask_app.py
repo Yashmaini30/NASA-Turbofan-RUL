@@ -46,6 +46,11 @@ def load_analysis_data():
                 'description': 'Sophisticated analytical techniques and uncertainty quantification',
                 'sections': ['PCA Analysis', 'Drift Detection', 'Uncertainty Baseline', 'Statistical Failure Analysis']
             },
+            'model_results': {
+                'name': 'Model Performance Analysis',
+                'description': 'Evaluation of LSTM model predictions and error analysis',
+                'sections': ['Actual vs Predicted', 'Error Distribution', 'Residual Analysis', 'Prediction Bias']
+            },
             'data_quality': {
                 'name': 'Data Quality Assessment',
                 'description': 'Comprehensive data validation and quality metrics',
@@ -76,6 +81,7 @@ def get_available_plots():
         'overview': [],
         'basic_eda': {},
         'advanced_analysis': {},
+        'model_results': {},
         'data_quality': []
     }
     
@@ -91,6 +97,7 @@ def get_available_plots():
     for dataset in DATASET_NAMES:
         plots['basic_eda'][dataset] = []
         plots['advanced_analysis'][dataset] = []
+        plots['model_results'][dataset] = []
         
         # Basic EDA plots
         basic_patterns = ['lifecycles', 'sensor_correlations', 'degradation_patterns', 'failure_patterns']
@@ -106,6 +113,13 @@ def get_available_plots():
             file = f"{dataset}_{pattern}.png"
             if (reports_dir / file).exists():
                 plots['advanced_analysis'][dataset].append(file)
+
+        # Model Result plots
+        if dataset == 'FD001':
+             model_files = ['lstm_actual_vs_predicted.png', 'lstm_error_distribution.png', 'lstm_residuals.png', 'lstm_prediction_bias.png']
+             for file in model_files:
+                if (reports_dir / 'figures' / file).exists():
+                    plots['model_results'][dataset].append(f"figures/{file}")
     
     return plots
 
@@ -117,6 +131,11 @@ def dashboard():
                          datasets=analysis_metadata['datasets'],
                          analysis_types=analysis_metadata['analysis_types'],
                          plots=plots)
+
+@app.route('/results')
+def results_showcase():
+    """Showcase the best model results."""
+    return render_template('results.html', datasets=datasets)
 
 @app.route('/dataset/<dataset_name>')
 def dataset_detail(dataset_name):
@@ -133,61 +152,7 @@ def dataset_detail(dataset_name):
                          plots=plots,
                          sensor_descriptions=SENSOR_DESCRIPTIONS)
 
-@app.route('/analysis/<analysis_type>')
-def analysis_view(analysis_type):
-    """View for specific analysis type across all datasets."""
-    if analysis_type not in analysis_metadata['analysis_types']:
-        return "Analysis type not found", 404
-    
-    plots = get_available_plots()
-    analysis_info = analysis_metadata['analysis_types'][analysis_type]
-    
-    return render_template('analysis_view.html',
-                         analysis_type=analysis_type,
-                         analysis_info=analysis_info,
-                         plots=plots,
-                         datasets=DATASET_NAMES)
-
-@app.route('/overview')
-def overview():
-    """System overview and summary statistics."""
-    plots = get_available_plots()
-    
-    # Calculate summary statistics
-    summary_stats = {
-        'total_datasets': len(DATASET_NAMES),
-        'total_engines': sum(info['train_engines'] + info['test_engines'] 
-                           for info in analysis_metadata['datasets'].values()),
-        'total_cycles': sum(info['train_shape'][0] + info['test_shape'][0] 
-                          for info in analysis_metadata['datasets'].values()),
-        'total_sensors': 21,
-        'analysis_generated': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-    
-    return render_template('overview.html',
-                         summary_stats=summary_stats,
-                         datasets=analysis_metadata['datasets'],
-                         plots=plots)
-
-@app.route('/api/dataset/<dataset_name>/stats')
-def dataset_stats_api(dataset_name):
-    """API endpoint for dataset statistics."""
-    if dataset_name not in datasets:
-        return jsonify({'error': 'Dataset not found'}), 404
-    
-    train_df = datasets[dataset_name]['train']
-    test_df = datasets[dataset_name]['test']
-    
-    stats = {
-        'train_stats': train_df.describe().to_dict(),
-        'test_stats': test_df.describe().to_dict(),
-        'sensor_variance': train_df[[col for col in train_df.columns if 'sensor' in col]].var().to_dict(),
-        'correlation_summary': train_df.corr().abs().mean().to_dict()
-    }
-    
-    return jsonify(stats)
-
-@app.route('/reports/<filename>')
+@app.route('/reports/<path:filename>')
 def serve_reports(filename):
     """Serve report images from the reports directory."""
     return send_from_directory(str(REPORTS_PATH), filename)

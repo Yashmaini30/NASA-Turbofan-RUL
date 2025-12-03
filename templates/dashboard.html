@@ -1,255 +1,115 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - NASA Turbofan RUL Analysis{% endblock %}
-
 {% block content %}
 <!-- Hero Section -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="hero-section bg-gradient-primary text-white rounded-3 p-4">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="display-6 fw-bold mb-3">
-                        <i class="fas fa-rocket me-3"></i>
-                        NASA Turbofan Engine RUL Analysis Dashboard
-                    </h1>
-                    <p class="lead mb-3">
-                        Comprehensive analysis of turbofan engine degradation patterns, sensor data, 
-                        and remaining useful life predictions using advanced statistical methods.
-                    </p>
-                    <div class="d-flex flex-wrap gap-3">
-                        <span class="badge bg-light text-primary fs-6">
-                            <i class="fas fa-database me-1"></i>4 Datasets
-                        </span>
-                        <span class="badge bg-light text-primary fs-6">
-                            <i class="fas fa-cog me-1"></i>21 Sensors
-                        </span>
-                        <span class="badge bg-light text-primary fs-6">
-                            <i class="fas fa-chart-line me-1"></i>15+ Analysis Methods
-                        </span>
-                    </div>
-                </div>
-                <div class="col-md-4 text-center">
-                    <i class="fas fa-plane display-1 opacity-50"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Stats Cards -->
-<div class="row mb-4">
-    {% for dataset_name, dataset_info in datasets.items() %}
-    <div class="col-md-3 mb-3">
-        <div class="card stat-card h-100 border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h5 class="card-title text-primary fw-bold">{{ dataset_name }}</h5>
-                        <p class="card-text small text-muted mb-0">{{ dataset_info.info.description }}</p>
-                    </div>
-                    <div class="stat-icon">
-                        <i class="fas fa-engine text-primary"></i>
-                    </div>
-                </div>
-                
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value">{{ dataset_info.train_engines + dataset_info.test_engines }}</div>
-                        <div class="stat-label">Total Engines</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">{{ "{:,}".format(dataset_info.train_shape[0] + dataset_info.test_shape[0]) }}</div>
-                        <div class="stat-label">Total Cycles</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">{{ "%.0f"|format(dataset_info.avg_life) }}</div>
-                        <div class="stat-label">Avg Lifecycle</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">{{ dataset_info.max_cycles }}</div>
-                        <div class="stat-label">Max Cycles</div>
-                    </div>
-                </div>
-                
-                <div class="mt-3">
-                    <a href="{{ url_for('dataset_detail', dataset_name=dataset_name) }}" 
-                       class="btn btn-outline-primary btn-sm w-100">
-                        <i class="fas fa-chart-area me-1"></i>View Analysis
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-
-<!-- Analysis Categories -->
-<div class="row mb-4">
-    <div class="col-12">
-        <h2 class="section-title mb-4">
-            <i class="fas fa-microscope me-2"></i>Analysis Categories
-        </h2>
-    </div>
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl shadow-2xl text-white p-10 mb-12 relative overflow-hidden">
+    <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-64 h-64 bg-blue-400 opacity-10 rounded-full blur-3xl"></div>
     
-    {% for analysis_type, analysis_info in analysis_types.items() %}
-    <div class="col-md-4 mb-3">
-        <div class="card analysis-card h-100 border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-start mb-3">
-                    <div class="analysis-icon me-3">
-                        {% if analysis_type == 'basic_eda' %}
-                            <i class="fas fa-chart-bar text-success"></i>
-                        {% elif analysis_type == 'advanced_analysis' %}
-                            <i class="fas fa-brain text-warning"></i>
-                        {% else %}
-                            <i class="fas fa-shield-alt text-info"></i>
-                        {% endif %}
-                    </div>
-                    <div>
-                        <h5 class="card-title">{{ analysis_info.name }}</h5>
-                        <p class="card-text text-muted">{{ analysis_info.description }}</p>
-                    </div>
-                </div>
-                
-                <ul class="list-unstyled small">
-                    {% for section in analysis_info.sections %}
-                    <li class="mb-1">
-                        <i class="fas fa-check text-success me-2"></i>{{ section }}
-                    </li>
-                    {% endfor %}
-                </ul>
-                
-                <div class="mt-3">
-                    <a href="{{ url_for('analysis_view', analysis_type=analysis_type) }}" 
-                       class="btn btn-primary btn-sm w-100">
-                        <i class="fas fa-eye me-1"></i>View Analysis
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-
-<!-- Overview Visualizations -->
-{% if plots.overview %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2 class="section-title mb-4">
-            <i class="fas fa-chart-line me-2"></i>System Overview
-        </h2>
-    </div>
-    
-    {% for plot in plots.overview %}
-    <div class="col-lg-6 mb-4">
-        <div class="card viz-card border-0 shadow-sm">
-            <div class="card-header bg-light">
-                <h6 class="mb-0">
-                    <i class="fas fa-image me-2"></i>
-                    {% if 'rul_distributions' in plot %}
-                        RUL Distribution Analysis
-                    {% elif 'operational_settings' in plot %}
-                        Operational Settings Overview
-                    {% elif 'data_quality_summary' in plot %}
-                        Data Quality Summary
-                    {% else %}
-                        {{ plot.replace('_', ' ').replace('.png', '').title() }}
-                    {% endif %}
-                </h6>
-            </div>
-            <div class="card-body text-center">
-                <img src="{{ url_for('static', filename='../reports/' + plot) }}" 
-                     class="img-fluid rounded shadow-sm" 
-                     alt="{{ plot }}"
-                     style="max-height: 400px; cursor: pointer;"
-                     onclick="showImageModal(this)">
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-
-<!-- Quick Navigation -->
-<div class="row">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="fas fa-compass me-2"></i>Quick Navigation
-                </h5>
-                <p class="card-text text-muted">
-                    Jump directly to specific analyses or dataset views
+    <div class="relative z-10">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Turbofan RUL Prediction</h1>
+                <p class="text-blue-100 text-lg max-w-2xl">
+                    Advanced Remaining Useful Life estimation using Bidirectional LSTM & GRU architectures on the NASA CMAPSS dataset.
                 </p>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="fw-bold mb-3">Dataset Analysis</h6>
-                        <div class="d-grid gap-2">
-                            {% for dataset_name in datasets.keys() %}
-                            <a href="{{ url_for('dataset_detail', dataset_name=dataset_name) }}" 
-                               class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-database me-2"></i>{{ dataset_name }} Detailed View
-                            </a>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="fw-bold mb-3">Analysis Types</h6>
-                        <div class="d-grid gap-2">
-                            <a href="{{ url_for('analysis_view', analysis_type='basic_eda') }}" 
-                               class="btn btn-outline-success btn-sm">
-                                <i class="fas fa-chart-bar me-2"></i>Basic EDA Comparison
-                            </a>
-                            <a href="{{ url_for('analysis_view', analysis_type='advanced_analysis') }}" 
-                               class="btn btn-outline-warning btn-sm">
-                                <i class="fas fa-brain me-2"></i>Advanced Analysis
-                            </a>
-                            <a href="{{ url_for('analysis_view', analysis_type='data_quality') }}" 
-                               class="btn btn-outline-info btn-sm">
-                                <i class="fas fa-shield-alt me-2"></i>Data Quality Assessment
-                            </a>
-                        </div>
-                    </div>
+            </div>
+            <div class="flex gap-4">
+                <a href="{{ url_for('results_showcase') }}" class="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg flex items-center gap-2">
+                    <i class="fas fa-chart-line"></i> View Results
+                </a>
+                <a href="https://github.com/Yashmaini30/NASA-Turbofan-RUL" target="_blank" class="bg-blue-500 bg-opacity-30 border border-blue-400 text-white px-6 py-3 rounded-xl font-bold hover:bg-opacity-40 transition flex items-center gap-2">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-12">
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div class="text-blue-200 text-sm font-medium mb-1">Best Model (FD001)</div>
+                <div class="text-3xl font-bold">GRU</div>
+                <div class="text-xs text-blue-200 mt-1">RMSE: 18.74</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div class="text-blue-200 text-sm font-medium mb-1">NASA Score</div>
+                <div class="text-3xl font-bold">1,277</div>
+                <div class="text-xs text-blue-200 mt-1">Achieved by LSTM</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div class="text-blue-200 text-sm font-medium mb-1">Total Engines</div>
+                <div class="text-3xl font-bold">709</div>
+                <div class="text-xs text-blue-200 mt-1">Across 4 datasets</div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div class="text-blue-200 text-sm font-medium mb-1">Improvement</div>
+                <div class="text-3xl font-bold">85.4%</div>
+                <div class="text-xs text-blue-200 mt-1">Over baseline</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Datasets Section -->
+<div class="mb-12">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+            <i class="fas fa-database text-blue-600"></i> Datasets
+        </h2>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for name, data in datasets.items() %}
+        <a href="{{ url_for('dataset_detail', dataset_name=name) }}" class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 overflow-hidden">
+            <div class="h-2 bg-blue-500 group-hover:bg-blue-600 transition-colors"></div>
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-bold text-slate-800">{{ name }}</h3>
+                    <span class="bg-blue-50 text-blue-600 text-xs font-bold px-2 py-1 rounded-lg">
+                        {{ data.train_engines + data.test_engines }} Engines
+                    </span>
+                </div>
+                <p class="text-slate-500 text-sm mb-4 h-10 line-clamp-2">
+                    {{ data.info.conditions }}
+                </p>
+                <div class="flex items-center text-sm text-slate-400 group-hover:text-blue-600 transition-colors">
+                    <span>Explore Analysis</span>
+                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </div>
-        </div>
+        </a>
+        {% endfor %}
     </div>
 </div>
 
-<!-- Image Modal -->
-<div class="modal fade" id="imageModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imageModalTitle">Visualization</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" class="img-fluid" alt="">
-            </div>
+<!-- Features / Tech Stack -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-4">
+            <i class="fas fa-brain text-xl"></i>
         </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">Deep Learning</h3>
+        <p class="text-slate-500 text-sm">
+            Implemented custom Bidirectional LSTM and GRU architectures using PyTorch Lightning for robust time-series forecasting.
+        </p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-4">
+            <i class="fas fa-chart-pie text-xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">Advanced Analytics</h3>
+        <p class="text-slate-500 text-sm">
+            Comprehensive EDA including PCA, drift detection, and sensor correlation analysis to understand degradation patterns.
+        </p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 mb-4">
+            <i class="fas fa-server text-xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">Deployment</h3>
+        <p class="text-slate-500 text-sm">
+            Interactive Flask dashboard for real-time visualization of model performance and dataset characteristics.
+        </p>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-function showImageModal(img) {
-    document.getElementById('modalImage').src = img.src;
-    document.getElementById('imageModalTitle').textContent = img.alt.replace('_', ' ').replace('.png', '');
-    new bootstrap.Modal(document.getElementById('imageModal')).show();
-}
-
-// Add smooth animations
-document.addEventListener('DOMContentLoaded', function() {
-    // Animate stat cards on load
-    const cards = document.querySelectorAll('.stat-card, .analysis-card');
-    cards.forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.1}s`;
-        card.classList.add('fade-in');
-    });
-});
-</script>
 {% endblock %}
